@@ -1,2 +1,5 @@
-# webgl-project
-WebGL Project - Computer Graphics - UFSCar Sorocaba 2019/01
+# WebGL Project
+UFSCar Sorocaba, Computer Science - Compiler Lab
+
+- Nathan Eloy
+- Isabella Soares
