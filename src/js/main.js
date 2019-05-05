@@ -3,6 +3,7 @@ import {
   PerspectiveCamera,
   WebGLRenderer,
   MeshPhongMaterial,
+  ShaderMaterial,
   PointLight,
   TextureLoader,
 } from '../../assets/js/vendor/three.module.js';
@@ -112,10 +113,12 @@ const createObject = (objLoader, txtLoader, sceneToAdd, objName) => {
     console.log(`${objName} loaded`);
     const newObject = object;
 
-    const texture = txtLoader.load(`${objName}.jpeg`);
+    //const texture = txtLoader.load(`${objName}.jpeg`);
 
-    // Must be changed for custom shader
-    const material = new MeshPhongMaterial({ map: texture });
+    var material = new ShaderMaterial( {
+      vertexShader: document.getElementById( 'vertexShader' ).textContent,
+      fragmentShader: document.getElementById( 'fragmentShader' ).textContent
+    });
 
     newObject.name = objName;
     newObject.position.z = -10;
