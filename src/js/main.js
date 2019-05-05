@@ -6,9 +6,12 @@ import {
   ShaderMaterial,
   PointLight,
   TextureLoader,
+  Vector2,
 } from '../../assets/js/vendor/three.module.js';
 
 import OBJLoader from '../../assets/js/vendor/OBJLoader.js';
+import fragmentShader from './fragmentShader.js';
+import vertexShader from './vertexShader.js';
 
 // Not used since we're doing a custom shader
 // import * as MTLLoader from '../../assets/js/vendor/MTLLoader.js';
@@ -66,13 +69,13 @@ const createLoaders = () => {
   const objLoader = new OBJLoader();
   objLoader.setPath(`${root}/assets/obj/`);
 
-  const txtLoader = new TextureLoader();
-  txtLoader.setPath(`${root}/assets/txt/`);
+  // const txtLoader = new TextureLoader();
+  // txtLoader.setPath(`${root}/assets/txt/`);
 
   // const mtlLoader = new THREE.MTLLoader();
   // mtlLoader.setPath(`${root}/assets/mtl/`);
 
-  return { objLoader, txtLoader };
+  return { objLoader };
 };
 
 /* Initializes scene */
@@ -108,17 +111,15 @@ const createRenderer = () => {
 };
 
 /* Loads an object into scene */
-const createObject = (objLoader, txtLoader, sceneToAdd, objName) => {
+const createObject = (objLoader, sceneToAdd, objName) => {
   const onSuccess = (object) => {
     console.log(`${objName} loaded`);
     const newObject = object;
 
-    //const texture = txtLoader.load(`${objName}.jpeg`);
+    const uniforms = {};
 
-    var material = new ShaderMaterial( {
-      vertexShader: document.getElementById( 'vertexShader' ).textContent,
-      fragmentShader: document.getElementById( 'fragmentShader' ).textContent
-    });
+    console.log(vertexShader);
+    const material = new ShaderMaterial({ uniforms, vertexShader, fragmentShader });
 
     newObject.name = objName;
     newObject.position.z = -10;
@@ -156,11 +157,11 @@ const init = () => {
   container = document.getElementById('container');
 
   const scene = createScene();
-  const { objLoader, txtLoader } = createLoaders();
-  createObject(objLoader, txtLoader, scene, 'CoffeeCup');
+  const { objLoader } = createLoaders();
+  createObject(objLoader, scene, 'CoffeeCup');
 
   // Not necessary for first phase
-  createLighting(scene);
+  // createLighting(scene);
 
   const camera = createCamera();
   const renderer = createRenderer();
