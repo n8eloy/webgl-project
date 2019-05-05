@@ -7,14 +7,14 @@
     <meta name="author" content="Isabella Soares, Nathan Eloy">
 
     <link rel="stylesheet" type="text/css" href="src/css/style.css">
-    <script type="text/javascript" src="assets/js/vendor/three.min.js" defer></script>
-    <script type="text/javascript" src="assets/js/vendor/OBJLoader.js" defer></script>
-    <script type="text/javascript" src="assets/js/vendor/MTLLoader.js" defer></script>
-    <script type="text/javascript" src="src/js/main.js" defer></script>
+    <script type="module">
+        import init from './src/js/main.js';
+        init();
+    </script>
 </head>
 
 <body>
-    <div id="canvasContainer"></div>
+    <div id="container"></div>
 
     <footer>
         <p>(UFSCar Sorocaba - Computação Gráfica) Isabella Soares, Nathan Eloy</p>
