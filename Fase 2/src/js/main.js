@@ -45,18 +45,25 @@ const animateObject = (scene) => {
   // Temporary animation, may be changed in future project phases
 
   // Searches for a single object
-  const object1 = scene.getObjectByName('CoffeeCup');
-  if (!object1) {
+  const objectCoffee = scene.getObjectByName('CoffeeCup');
+  if (!objectCoffee) {
     return;
   }
 
-  const object2 = scene.getObjectByName('Table');
-  if (!object2) {
+  const objectTable = scene.getObjectByName('Table');
+  if (!objectTable) {
     return;
   }
 
-  // Random sin function for cool moves
-  // object1.rotation.y += 0.01;
+  const objectFan = scene.getObjectByName('Fan');
+  if (!objectFan) {
+    return;
+  }
+
+  objectFan.rotation.x = 5;
+  objectFan.rotation.z += 0.01;
+
+  objectCoffee.rotation.y = 20;
 };
 
 /* Renders and call animation */
@@ -116,10 +123,10 @@ const createRenderer = () => {
 };
 
 /* Loads an object into scene */
-const createObject1 = (objLoader, sceneToAdd, objName) => {
-  const onSuccess = (object1) => {
+const createobjectCoffee = (objLoader, sceneToAdd, objName) => {
+  const onSuccess = (objectCoffee) => {
     console.log(`${objName} loaded`);
-    const newObject = object1;
+    const newObject = objectCoffee;
 
     const uniforms = {};
 
@@ -127,9 +134,10 @@ const createObject1 = (objLoader, sceneToAdd, objName) => {
     const material = new ShaderMaterial({ uniforms, vertexShader, fragmentShader });
 
     newObject.name = objName;
-    newObject.position.z = -10;
-    newObject.position.y = 10;
-    newObject.scale.set(1, 1, 1);
+    newObject.position.z = 2;
+    newObject.position.y = 15.2;
+    newObject.position.x = 1;
+    newObject.scale.set(0.12, 0.12, 0.12);
 
     newObject.traverse((node) => {
       if (node.isMesh) {
@@ -150,10 +158,10 @@ const createObject1 = (objLoader, sceneToAdd, objName) => {
     });
 };
 
-const createObject2 = (objLoader, sceneToAdd, objName) => {
-  const onSuccess = (object2) => {
+const createobjectTable = (objLoader, sceneToAdd, objName) => {
+  const onSuccess = (objectTable) => {
     console.log(`${objName} loaded`);
-    const newObject = object2;
+    const newObject = objectTable;
 
     const uniforms = {};
 
@@ -161,8 +169,43 @@ const createObject2 = (objLoader, sceneToAdd, objName) => {
     const material = new ShaderMaterial({ uniforms, vertexShader, fragmentShader });
 
     newObject.name = objName;
-    newObject.position.z = 0;
-    newObject.position.y = 10;
+    newObject.position.z = -5;
+    newObject.position.y = 7;
+    newObject.scale.set(2, 2, 2);
+
+    newObject.traverse((node) => {
+      if (node.isMesh) {
+        node.material = material;
+      }
+    });
+
+    sceneToAdd.add(newObject);
+  };
+
+  const onProgress = (xhr) => {
+    console.log(`${xhr.loaded / (xhr.total || 1) * 100}% loaded`);
+  };
+
+  objLoader.load(`${objName}.obj`, onSuccess, onProgress,
+    (err) => {
+      console.log(err);
+    });
+};
+
+const createobjectFan = (objLoader, sceneToAdd, objName) => {
+  const onSuccess = (objectFan) => {
+    console.log(`${objName} loaded`);
+    const newObject = objectFan;
+
+    const uniforms = {};
+
+    console.log(vertexShader);
+    const material = new ShaderMaterial({ uniforms, vertexShader, fragmentShader });
+
+    newObject.name = objName;
+    newObject.position.z = -500;
+    newObject.position.y = 70;
+    newObject.position.x = 3;
     newObject.scale.set(1, 1, 1);
 
     newObject.traverse((node) => {
@@ -197,8 +240,9 @@ const init = () => {
 
   const scene = createScene();
   const { objLoader } = createLoaders();
-  createObject1(objLoader, scene, 'CoffeeCup');
-  createObject2(objLoader, scene, 'Table');
+  createobjectCoffee(objLoader, scene, 'CoffeeCup');
+  createobjectTable(objLoader, scene, 'Table');
+  createobjectFan(objLoader, scene, 'Fan');
 
   // Not necessary for first phase
   // createLighting(scene);
@@ -210,7 +254,7 @@ const init = () => {
   render(scene, camera, renderer);
 
   // Listens for browser window size changes
-  window.addEventListener('resize', onWindowResize.bind(null, scene, camera, renderer));
+  window.addEventListener('resize', onWindowResize.bind(null, scene, camera, renderer));  
 };
 
 export default () => {
