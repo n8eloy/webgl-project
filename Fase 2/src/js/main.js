@@ -45,13 +45,18 @@ const animateObject = (scene) => {
   // Temporary animation, may be changed in future project phases
 
   // Searches for a single object
-  const object = scene.getObjectByName('CoffeeCup');
-  if (!object) {
+  const object1 = scene.getObjectByName('CoffeeCup');
+  if (!object1) {
+    return;
+  }
+
+  const object2 = scene.getObjectByName('Table');
+  if (!object2) {
     return;
   }
 
   // Random sin function for cool moves
-  object.rotation.y += 0.01;
+  // object1.rotation.y += 0.01;
 };
 
 /* Renders and call animation */
@@ -111,10 +116,10 @@ const createRenderer = () => {
 };
 
 /* Loads an object into scene */
-const createObject = (objLoader, sceneToAdd, objName) => {
-  const onSuccess = (object) => {
+const createObject1 = (objLoader, sceneToAdd, objName) => {
+  const onSuccess = (object1) => {
     console.log(`${objName} loaded`);
-    const newObject = object;
+    const newObject = object1;
 
     const uniforms = {};
 
@@ -123,6 +128,40 @@ const createObject = (objLoader, sceneToAdd, objName) => {
 
     newObject.name = objName;
     newObject.position.z = -10;
+    newObject.position.y = 10;
+    newObject.scale.set(1, 1, 1);
+
+    newObject.traverse((node) => {
+      if (node.isMesh) {
+        node.material = material;
+      }
+    });
+
+    sceneToAdd.add(newObject);
+  };
+
+  const onProgress = (xhr) => {
+    console.log(`${xhr.loaded / (xhr.total || 1) * 100}% loaded`);
+  };
+
+  objLoader.load(`${objName}.obj`, onSuccess, onProgress,
+    (err) => {
+      console.log(err);
+    });
+};
+
+const createObject2 = (objLoader, sceneToAdd, objName) => {
+  const onSuccess = (object2) => {
+    console.log(`${objName} loaded`);
+    const newObject = object2;
+
+    const uniforms = {};
+
+    console.log(vertexShader);
+    const material = new ShaderMaterial({ uniforms, vertexShader, fragmentShader });
+
+    newObject.name = objName;
+    newObject.position.z = 0;
     newObject.position.y = 10;
     newObject.scale.set(1, 1, 1);
 
@@ -158,7 +197,8 @@ const init = () => {
 
   const scene = createScene();
   const { objLoader } = createLoaders();
-  createObject(objLoader, scene, 'CoffeeCup');
+  createObject1(objLoader, scene, 'CoffeeCup');
+  createObject2(objLoader, scene, 'Table');
 
   // Not necessary for first phase
   // createLighting(scene);
