@@ -10,7 +10,7 @@ O foco deste projeto é colocar em prática conhecimentos teóricos vistos nas a
 
 ## English Resume
 
-The project focus is to apply theoretical knowledge as seen in Computer Graphics classes, being its development divided into Activities. Code versioning can be found in [repository releases][1]. As requested, this projects provides an [wiki][2], explaining the development process. Both releases description and wiki are available in portuguese only.
+The project's focus is putting theoretical knowledge, as seen in Computer Graphics classes, into practice, being it's development divided into Activities. Code versioning can be found in [repository releases][1]. As requested, this projects provides a [wiki][2], explaining the development process. Both releases' description and wiki are available in portuguese only.
 
 [1]: https://github.com/n8eloy/webgl-project/releases
 [2]: https://github.com/n8eloy/webgl-project/wiki
