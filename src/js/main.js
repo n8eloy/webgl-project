@@ -123,21 +123,20 @@ const createRenderer = () => {
 };
 
 /* Loads an object into scene */
-const createobjectCoffee = (objLoader, sceneToAdd, objName) => {
-  const onSuccess = (objectCoffee) => {
+const createObject = (objLoader, sceneToAdd, objName,
+  vec3Position = { x: 0, y: 0, z: 0 },
+  vec3Scale = { x: 1, y: 1, z: 1 }) => {
+  const onSuccess = (object) => {
     console.log(`${objName} loaded`);
-    const newObject = objectCoffee;
+    const newObject = object;
 
     const uniforms = {};
 
-    console.log(vertexShader);
     const material = new ShaderMaterial({ uniforms, vertexShader, fragmentShader });
 
     newObject.name = objName;
-    newObject.position.z = 2;
-    newObject.position.y = 15.2;
-    newObject.position.x = 1;
-    newObject.scale.set(0.12, 0.12, 0.12);
+    newObject.position.set(vec3Position.x, vec3Position.y, vec3Position.z);
+    newObject.scale.set(vec3Scale.x, vec3Scale.y, vec3Scale.z);
 
     newObject.traverse((node) => {
       if (node.isMesh) {
@@ -152,79 +151,9 @@ const createobjectCoffee = (objLoader, sceneToAdd, objName) => {
     console.log(`${xhr.loaded / (xhr.total || 1) * 100}% loaded`);
   };
 
-  objLoader.load(`${objName}.obj`, onSuccess, onProgress,
-    (err) => {
-      console.log(err);
-    });
-};
-
-const createobjectTable = (objLoader, sceneToAdd, objName) => {
-  const onSuccess = (objectTable) => {
-    console.log(`${objName} loaded`);
-    const newObject = objectTable;
-
-    const uniforms = {};
-
-    console.log(vertexShader);
-    const material = new ShaderMaterial({ uniforms, vertexShader, fragmentShader });
-
-    newObject.name = objName;
-    newObject.position.z = -5;
-    newObject.position.y = 7;
-    newObject.scale.set(2, 2, 2);
-
-    newObject.traverse((node) => {
-      if (node.isMesh) {
-        node.material = material;
-      }
-    });
-
-    sceneToAdd.add(newObject);
-  };
-
-  const onProgress = (xhr) => {
-    console.log(`${xhr.loaded / (xhr.total || 1) * 100}% loaded`);
-  };
-
-  objLoader.load(`${objName}.obj`, onSuccess, onProgress,
-    (err) => {
-      console.log(err);
-    });
-};
-
-const createobjectFan = (objLoader, sceneToAdd, objName) => {
-  const onSuccess = (objectFan) => {
-    console.log(`${objName} loaded`);
-    const newObject = objectFan;
-
-    const uniforms = {};
-
-    console.log(vertexShader);
-    const material = new ShaderMaterial({ uniforms, vertexShader, fragmentShader });
-
-    newObject.name = objName;
-    newObject.position.z = -500;
-    newObject.position.y = 70;
-    newObject.position.x = 3;
-    newObject.scale.set(1, 1, 1);
-
-    newObject.traverse((node) => {
-      if (node.isMesh) {
-        node.material = material;
-      }
-    });
-
-    sceneToAdd.add(newObject);
-  };
-
-  const onProgress = (xhr) => {
-    console.log(`${xhr.loaded / (xhr.total || 1) * 100}% loaded`);
-  };
-
-  objLoader.load(`${objName}.obj`, onSuccess, onProgress,
-    (err) => {
-      console.log(err);
-    });
+  objLoader.load(`${objName}.obj`, onSuccess, onProgress, (err) => {
+    console.log(err);
+  });
 };
 
 /* Adds lighting to scene */
@@ -240,9 +169,22 @@ const init = () => {
 
   const scene = createScene();
   const { objLoader } = createLoaders();
-  createobjectCoffee(objLoader, scene, 'CoffeeCup');
-  createobjectTable(objLoader, scene, 'Table');
-  createobjectFan(objLoader, scene, 'Fan');
+
+  // Loads objects into scene
+  createObject(objLoader, scene, 'CoffeeCup',
+    { x: 1, y: 15.2, z: 2 },
+    { x: 0.12, y: 0.12, z: 0.12 },
+  );
+
+  createObject(objLoader, scene, 'Table',
+    { x: 0, y: 7, z: -5 },
+    { x: 2, y: 2, z: 2 },
+  );
+
+  createObject(objLoader, scene, 'Fan',
+    { x: 3, y: 70, z: -500 },
+    { x: 1, y: 1, z: 1 },
+  );
 
   // Not necessary for first phase
   // createLighting(scene);
