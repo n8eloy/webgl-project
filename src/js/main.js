@@ -6,7 +6,7 @@ import {
   ShaderMaterial,
   PointLight,
   TextureLoader,
-  Vector2,
+  Color,
 } from '../../assets/js/vendor/three.module.js';
 
 import OBJLoader from '../../assets/js/vendor/OBJLoader.js';
@@ -16,62 +16,56 @@ import vertexShader from './vertexShader.js';
 // Not used since we're doing a custom shader
 // import * as MTLLoader from '../../assets/js/vendor/MTLLoader.js';
 
-let container;
-const root = '.';
+let CONTAINER;
+const ROOT = '.';
+
+const USER_INPUT = {
+  fanSpeed: 0.01,
+  currCamera: 0,
+};
+
+const CAMERA_ARRAY = [];
 
 /* ---- Helpers ---- */
 
 /* Lazy function so we don't have to repeat the same thing several times */
 const getContainerSize = () => {
-  console.log(`Canvas Width: ${container.clientWidth}, Heigth: ${container.clientHeight}`);
-  return { width: container.clientWidth, height: container.clientHeight };
+  console.log(`Canvas Width: ${CONTAINER.clientWidth}, Heigth: ${CONTAINER.clientHeight}`);
+  return { width: CONTAINER.clientWidth, height: CONTAINER.clientHeight };
 };
 
 /* Resizes canvas, fires when browser window size is altered */
-const onWindowResize = (scene, camera, renderer) => {
+const onWindowResize = (scene, renderer) => {
   const { width, height } = getContainerSize();
 
   // Updates camera and renderer properties
-  camera.aspect = width / height;
-  camera.updateProjectionMatrix();
+  CAMERA_ARRAY[USER_INPUT.currCamera].aspect = width / height;
+  CAMERA_ARRAY[USER_INPUT.currCamera].updateProjectionMatrix();
   renderer.setSize(width, height);
 
   // Renders again
-  renderer.render(scene, camera);
+  renderer.render(scene);
 };
 
 /* Animates a single object, called in every render loop */
-const animateObject = (scene) => {
-  // Temporary animation, may be changed in future project phases
-
+const rotateObject = (scene, objectName, { incX = 0, incY = 0, incZ = 0 }) => {
   // Searches for a single object
-  const objectCoffee = scene.getObjectByName('CoffeeCup');
-  if (!objectCoffee) {
+  const object = scene.getObjectByName(objectName);
+  if (!object) {
     return;
   }
 
-  const objectTable = scene.getObjectByName('Table');
-  if (!objectTable) {
-    return;
-  }
-
-  const objectFan = scene.getObjectByName('Fan');
-  if (!objectFan) {
-    return;
-  }
-
-  objectFan.rotation.x = 5;
-  objectFan.rotation.z += 0.01;
-
-  objectCoffee.rotation.y = 20;
+  const { x: currX, y: currY, z: currZ } = object.rotation;
+  object.rotation.set(currX + incX, currY + incY, currZ + incZ);
 };
 
-/* Renders and call animation */
-const render = (scene, camera, renderer) => {
-  animateObject(scene);
-  renderer.render(scene, camera);
+/* Render and animation loop */
+const render = (scene, renderer) => {
+  rotateObject(scene, 'Fan', { incZ: USER_INPUT.fanSpeed });
+  rotateObject(scene, 'Table', { incY: 0.001 });
+  renderer.render(scene, CAMERA_ARRAY[USER_INPUT.currCamera]);
 
-  requestAnimationFrame(render.bind(null, scene, camera, renderer));
+  requestAnimationFrame(render.bind(null, scene, renderer));
 };
 
 /* ---- Constructors ---- */
@@ -79,13 +73,13 @@ const render = (scene, camera, renderer) => {
 /* Initializes file loaders */
 const createLoaders = () => {
   const objLoader = new OBJLoader();
-  objLoader.setPath(`${root}/assets/obj/`);
+  objLoader.setPath(`${ROOT}/assets/obj/`);
 
   // const txtLoader = new TextureLoader();
-  // txtLoader.setPath(`${root}/assets/txt/`);
+  // txtLoader.setPath(`${ROOT}/assets/txt/`);
 
   // const mtlLoader = new THREE.MTLLoader();
-  // mtlLoader.setPath(`${root}/assets/mtl/`);
+  // mtlLoader.setPath(`${ROOT}/assets/mtl/`);
 
   return { objLoader };
 };
@@ -97,12 +91,18 @@ const createScene = () => {
 };
 
 /* Initializes camera */
-const createCamera = () => {
+const createCamera = ({
+  x = 0, y = 0, z = 0,
+  lookX = null, lookY = null, lookZ = null,
+}) => {
   const { width, height } = getContainerSize();
 
   const camera = new PerspectiveCamera(75, width / height, 0.1, 1000);
-  camera.position.y = 20;
-  camera.position.z = 20;
+  camera.position.set(x, y, z);
+
+  if (lookX && lookY && lookZ) {
+    camera.lookAt(lookX, lookY, lookZ);
+  }
 
   return camera;
 };
@@ -117,26 +117,32 @@ const createRenderer = () => {
   renderer.setSize(width, height);
 
   // Appends renderer to container div
-  container.appendChild(renderer.domElement);
+  CONTAINER.appendChild(renderer.domElement);
 
   return renderer;
 };
 
 /* Loads an object into scene */
-const createObject = (objLoader, sceneToAdd, objName,
-  vec3Position = { x: 0, y: 0, z: 0 },
-  vec3Scale = { x: 1, y: 1, z: 1 }) => {
+const createObject = (objLoader, sceneToAdd, objName, objHexColor,
+  {
+    posX = 0, posY = 0, posZ = 0,
+    scaleX = 1, scaleY = 1, scaleZ = 1,
+    rotX = 0, rotY = 0, rotZ = 0,
+  }) => {
   const onSuccess = (object) => {
     console.log(`${objName} loaded`);
     const newObject = object;
 
-    const uniforms = {};
+    const uniforms = {
+      color: { type: 'vec3', value: new Color(objHexColor) },
+    };
 
     const material = new ShaderMaterial({ uniforms, vertexShader, fragmentShader });
 
     newObject.name = objName;
-    newObject.position.set(vec3Position.x, vec3Position.y, vec3Position.z);
-    newObject.scale.set(vec3Scale.x, vec3Scale.y, vec3Scale.z);
+    newObject.position.set(posX, posY, posZ);
+    newObject.scale.set(scaleX, scaleY, scaleZ);
+    newObject.rotation.set(rotX, rotY, rotZ);
 
     newObject.traverse((node) => {
       if (node.isMesh) {
@@ -162,44 +168,104 @@ const createLighting = (scene) => {
   scene.add(light);
 };
 
+/* ---- User interaction ---- */
+
+const receiveInput = ({ keyCode }) => {
+  switch (keyCode) {
+    case 39:
+      USER_INPUT.fanSpeed += 0.01;
+      break;
+    case 37:
+      USER_INPUT.fanSpeed -= 0.01;
+      break;
+    case 38:
+      if (USER_INPUT.currCamera + 1 >= CAMERA_ARRAY.length) {
+        USER_INPUT.currCamera = 0;
+      } else {
+        USER_INPUT.currCamera += 1;
+      }
+      break;
+    case 40:
+      if (USER_INPUT.currCamera - 1 < 0) {
+        USER_INPUT.currCamera = CAMERA_ARRAY.length - 1;
+      } else {
+        USER_INPUT.currCamera -= 1;
+      }
+      break;
+    default:
+      console.log(keyCode);
+      break;
+  }
+};
+
 /* ---- Init ---- */
 
 const init = () => {
-  container = document.getElementById('container');
+  CONTAINER = document.getElementById('container');
 
   const scene = createScene();
   const { objLoader } = createLoaders();
 
   // Loads objects into scene
-  createObject(objLoader, scene, 'CoffeeCup',
-    { x: 1, y: 15.2, z: 2 },
-    { x: 0.12, y: 0.12, z: 0.12 },
-  );
+  createObject(objLoader, scene, 'CoffeeCup', 0xC8AD90,
+    {
+      posX: 1,
+      posY: 15.2,
+      posZ: 2,
+      scaleX: 0.12,
+      scaleY: 0.12,
+      scaleZ: 0.12,
+      rotY: 20,
+    });
 
-  createObject(objLoader, scene, 'Table',
-    { x: 0, y: 7, z: -5 },
-    { x: 2, y: 2, z: 2 },
-  );
+  createObject(objLoader, scene, 'Table', 0x654321,
+    {
+      posX: 0,
+      posY: 7,
+      posZ: -5,
+      scaleX: 2,
+      scaleY: 2,
+      scaleZ: 2,
+    });
 
-  createObject(objLoader, scene, 'Fan',
-    { x: 3, y: 70, z: -500 },
-    { x: 1, y: 1, z: 1 },
-  );
+  createObject(objLoader, scene, 'Fan', 0x101010,
+    {
+      posX: 3,
+      posY: 70,
+      posZ: -500,
+      rotX: 5,
+    });
 
   // Not necessary for first phase
   // createLighting(scene);
 
-  const camera = createCamera();
+  CAMERA_ARRAY.push(createCamera({
+    x: 0,
+    y: 20,
+    z: 20,
+  }));
+
+  CAMERA_ARRAY.push(createCamera({
+    x: 20,
+    y: 35,
+    z: 40,
+    lookX: 0,
+    lookY: 20,
+    lookZ: 0,
+  }));
+
   const renderer = createRenderer();
 
   // First time render
-  render(scene, camera, renderer);
+  render(scene, renderer);
 
   // Listens for browser window size changes
-  window.addEventListener('resize', onWindowResize.bind(null, scene, camera, renderer));  
+  window.addEventListener('resize', onWindowResize.bind(null, scene, renderer));
 };
 
 export default () => {
-  /* Awaiting for DOM to load so we don't get window size issues */
+  /* Awaits for DOM to load so we don't get window size issues */
   window.addEventListener('load', init);
+  /* Awaits for user input */
+  window.addEventListener('keydown', receiveInput);
 };
