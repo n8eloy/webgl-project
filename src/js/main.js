@@ -20,7 +20,7 @@ let CONTAINER;
 const ROOT = '.';
 
 const USER_INPUT = {
-  fanSpeed: 0.01,
+  fanSpeed: 1,
   currCamera: 0,
 };
 
@@ -32,6 +32,11 @@ const CAMERA_ARRAY = [];
 const getContainerSize = () => {
   console.log(`Canvas Width: ${CONTAINER.clientWidth}, Heigth: ${CONTAINER.clientHeight}`);
   return { width: CONTAINER.clientWidth, height: CONTAINER.clientHeight };
+};
+
+/* Converts degrees to radians */
+const degToRad = (degrees = 0) => {
+  return degrees * Math.PI / 180;
 };
 
 /* Resizes canvas, fires when browser window size is altered */
@@ -61,8 +66,9 @@ const rotateObject = (scene, objectName, { incX = 0, incY = 0, incZ = 0 }) => {
 
 /* Render and animation loop */
 const render = (scene, renderer) => {
-  rotateObject(scene, 'Fan', { incZ: USER_INPUT.fanSpeed });
-  rotateObject(scene, 'Table', { incY: 0.001 });
+  rotateObject(scene, 'Fan', { incZ: degToRad(USER_INPUT.fanSpeed) });
+  rotateObject(scene, 'Table', { incY: degToRad(0.25) });
+  rotateObject(scene, 'CoffeeCup', { incY: degToRad(0.25) });
   renderer.render(scene, CAMERA_ARRAY[USER_INPUT.currCamera]);
 
   requestAnimationFrame(render.bind(null, scene, renderer));
@@ -100,7 +106,7 @@ const createCamera = ({
   const camera = new PerspectiveCamera(75, width / height, 0.1, 1000);
   camera.position.set(x, y, z);
 
-  if (lookX && lookY && lookZ) {
+  if (!(lookX == null || lookY == null || lookZ == null)) {
     camera.lookAt(lookX, lookY, lookZ);
   }
 
@@ -173,10 +179,10 @@ const createLighting = (scene) => {
 const receiveInput = ({ keyCode }) => {
   switch (keyCode) {
     case 39:
-      USER_INPUT.fanSpeed += 0.01;
+      USER_INPUT.fanSpeed += 1;
       break;
     case 37:
-      USER_INPUT.fanSpeed -= 0.01;
+      USER_INPUT.fanSpeed -= 1;
       break;
     case 38:
       if (USER_INPUT.currCamera + 1 >= CAMERA_ARRAY.length) {
@@ -209,20 +215,16 @@ const init = () => {
   // Loads objects into scene
   createObject(objLoader, scene, 'CoffeeCup', 0xC8AD90,
     {
-      posX: 1,
-      posY: 15.2,
-      posZ: 2,
-      scaleX: 0.12,
-      scaleY: 0.12,
-      scaleZ: 0.12,
+      posY: 13.3,
+      scaleX: 0.15,
+      scaleY: 0.15,
+      scaleZ: 0.15,
       rotY: 20,
     });
 
   createObject(objLoader, scene, 'Table', 0x654321,
     {
-      posX: 0,
       posY: 7,
-      posZ: -5,
       scaleX: 2,
       scaleY: 2,
       scaleZ: 2,
@@ -230,10 +232,11 @@ const init = () => {
 
   createObject(objLoader, scene, 'Fan', 0x101010,
     {
-      posX: 3,
-      posY: 70,
-      posZ: -500,
-      rotX: 5,
+      posY: 25,
+      rotX: degToRad(-90),
+      scaleX: 0.07,
+      scaleY: 0.07,
+      scaleZ: 0.07,
     });
 
   // Not necessary for first phase
@@ -242,15 +245,14 @@ const init = () => {
   CAMERA_ARRAY.push(createCamera({
     x: 0,
     y: 20,
-    z: 20,
+    z: 30,
   }));
 
   CAMERA_ARRAY.push(createCamera({
-    x: 20,
-    y: 35,
-    z: 40,
+    x: 15,
+    y: 45,
     lookX: 0,
-    lookY: 20,
+    lookY: 30,
     lookZ: 0,
   }));
 
