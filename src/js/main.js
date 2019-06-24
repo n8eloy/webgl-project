@@ -71,8 +71,8 @@ const rotateObject = (scene, objectName, { incX = 0, incY = 0, incZ = 0 }) => {
 /* Render and animation loop */
 const render = (scene, renderer) => {
   rotateObject(scene, 'Fan', { incZ: degToRad(USER_INPUT.fanSpeed) });
-  rotateObject(scene, 'Table', { incY: degToRad(0.25) });
-  rotateObject(scene, 'CoffeeCup', { incY: degToRad(0.25) });
+  // rotateObject(scene, 'Table', { incY: degToRad(0.25) });
+  // rotateObject(scene, 'CoffeeCup', { incY: degToRad(0.25) });
   renderer.render(scene, CAMERA_ARRAY[USER_INPUT.currCamera]);
 
   requestAnimationFrame(render.bind(null, scene, renderer));
@@ -123,7 +123,7 @@ const createRenderer = () => {
   console.log(`Canvas Width: ${width}, Heigth: ${height}`);
 
   const renderer = new WebGLRenderer({ antialias: true });
-  renderer.setClearColor('#272120');
+  renderer.setClearColor('#666');
   renderer.setPixelRatio(window.devicePixelRatio);
   renderer.setSize(width, height);
 
