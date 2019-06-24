@@ -2,11 +2,10 @@ import {
   Scene,
   PerspectiveCamera,
   WebGLRenderer,
-  MeshPhongMaterial,
   ShaderMaterial,
-  PointLight,
-  TextureLoader,
   Color,
+  Vector3,
+  Vector4,
 } from '../../assets/js/vendor/three.module.js';
 
 import OBJLoader from '../../assets/js/vendor/OBJLoader.js';
@@ -146,6 +145,11 @@ const createObject = (objLoader, sceneToAdd, objName, objHexColor,
 
     const uniforms = {
       color: { type: 'vec3', value: new Color(objHexColor) },
+      lightInt: { value: new Vector4(0.7, 0.7, 0.7, 1.0) },
+      lightPos: { value: new Vector4(10.0, 10.0, 0.0, 1.0) },
+      ambientCoef: { value: new Vector3(0.1, 0.1, 0.1) },
+      diffuseCoef: { value: new Vector3(1, 1, 1) },
+      specularCoef: { value: new Vector3(0.3, 0.3, 0.3) },
     };
 
     const material = new ShaderMaterial({ uniforms, vertexShader, fragmentShader });
@@ -171,13 +175,6 @@ const createObject = (objLoader, sceneToAdd, objName, objHexColor,
   objLoader.load(`${objName}.obj`, onSuccess, onProgress, (err) => {
     console.log(err);
   });
-};
-
-/* Adds lighting to scene */
-const createLighting = (scene) => {
-  const light = new PointLight(0xFFFF55, 100, -10);
-  light.position.set(0, 0, 0);
-  scene.add(light);
 };
 
 /* ---- User interaction ---- */
@@ -238,7 +235,7 @@ const init = () => {
       scaleZ: 2,
     });
 
-  createObject(objLoader, scene, 'Fan', 0x101010,
+  createObject(objLoader, scene, 'Fan', 0x202020,
     {
       posY: 25,
       rotX: degToRad(-90),
@@ -246,9 +243,6 @@ const init = () => {
       scaleY: 0.07,
       scaleZ: 0.07,
     });
-
-  // Not necessary for first phase
-  // createLighting(scene);
 
   CAMERA_ARRAY.push(createCamera({
     x: 0,
