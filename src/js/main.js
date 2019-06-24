@@ -29,27 +29,31 @@ const CAMERA_ARRAY = [];
 /* ---- Helpers ---- */
 
 /* Lazy function so we don't have to repeat the same thing several times */
-const getContainerSize = () => {
-  console.log(`Canvas Width: ${CONTAINER.clientWidth}, Heigth: ${CONTAINER.clientHeight}`);
-  return { width: CONTAINER.clientWidth, height: CONTAINER.clientHeight };
-};
+const getContainerSize = () => ({ width: CONTAINER.clientWidth, height: CONTAINER.clientHeight });
 
 /* Converts degrees to radians */
-const degToRad = (degrees = 0) => {
-  return degrees * Math.PI / 180;
+const degToRad = (degrees = 0) => degrees * Math.PI / 180;
+
+/* Updates camera */
+const updateCameraRatio = () => {
+  const { width, height } = getContainerSize();
+
+  CAMERA_ARRAY[USER_INPUT.currCamera].aspect = width / height;
+  CAMERA_ARRAY[USER_INPUT.currCamera].updateProjectionMatrix();
 };
 
 /* Resizes canvas, fires when browser window size is altered */
 const onWindowResize = (scene, renderer) => {
   const { width, height } = getContainerSize();
+  updateCameraRatio();
 
-  // Updates camera and renderer properties
-  CAMERA_ARRAY[USER_INPUT.currCamera].aspect = width / height;
-  CAMERA_ARRAY[USER_INPUT.currCamera].updateProjectionMatrix();
+  console.log(`Canvas Width: ${width}, Heigth: ${height}`);
+
+  // Updates renderer properties
   renderer.setSize(width, height);
 
   // Renders again
-  renderer.render(scene);
+  renderer.render(scene, CAMERA_ARRAY[USER_INPUT.currCamera]);
 };
 
 /* Animates a single object, called in every render loop */
@@ -116,6 +120,7 @@ const createCamera = ({
 /* Initializes renderer */
 const createRenderer = () => {
   const { width, height } = getContainerSize();
+  console.log(`Canvas Width: ${width}, Heigth: ${height}`);
 
   const renderer = new WebGLRenderer({ antialias: true });
   renderer.setClearColor('#272120');
@@ -171,6 +176,7 @@ const createObject = (objLoader, sceneToAdd, objName, objHexColor,
 /* Adds lighting to scene */
 const createLighting = (scene) => {
   const light = new PointLight(0xFFFF55, 100, -10);
+  light.position.set(0, 0, 0);
   scene.add(light);
 };
 
@@ -190,6 +196,7 @@ const receiveInput = ({ keyCode }) => {
       } else {
         USER_INPUT.currCamera += 1;
       }
+      updateCameraRatio();
       break;
     case 40:
       if (USER_INPUT.currCamera - 1 < 0) {
@@ -197,6 +204,7 @@ const receiveInput = ({ keyCode }) => {
       } else {
         USER_INPUT.currCamera -= 1;
       }
+      updateCameraRatio();
       break;
     default:
       console.log(keyCode);
