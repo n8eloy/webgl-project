@@ -6,6 +6,7 @@ import {
   Color,
   Vector3,
   Vector4,
+  CubicBezierCurve3
 } from '../../assets/js/vendor/three.module.js';
 
 import OBJLoader from '../../assets/js/vendor/OBJLoader.js';
