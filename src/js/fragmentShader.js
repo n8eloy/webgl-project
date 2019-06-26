@@ -23,8 +23,7 @@ const shader = () => `
 
     vec4 finalColor = vec4(lightInt * (ambient + diffuse + specular), 1.0);
 
-    vec4 testColor = finalColor;
-    gl_FragColor = testColor;
+    gl_FragColor = finalColor;
   }
 `;
 
