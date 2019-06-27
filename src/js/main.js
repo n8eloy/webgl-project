@@ -83,7 +83,7 @@ const render = (scene, renderer) => {
 
   requestAnimationFrame(render.bind(null, scene, renderer));
 
-  moveObject(scene, 'Table');
+  moveObject(scene, 'Bee');
 };
 
 /* ---- Constructors ---- */
@@ -186,6 +186,7 @@ const createObject = (objLoader, sceneToAdd, objName, objHexColor,
   });
 };
 
+/* Creates the Bezier Curve and add it into scene */
 const addCurve = (sceneToAdd) => {
   const curve = new CubicBezierCurve3(
     new Vector3( -5, 20, 0 ),
@@ -197,7 +198,7 @@ const addCurve = (sceneToAdd) => {
   const points = curve.getPoints( 50 );
   const geometry = new BufferGeometry().setFromPoints( points );
   
-  const material2 = new LineBasicMaterial( { color : 0xff0000 } );
+  const material2 = new LineBasicMaterial( { color : 0xffffff } );
   
   // Create the final object to add to the scene
   const curveObject = new Line( geometry, material2 );
@@ -206,12 +207,12 @@ const addCurve = (sceneToAdd) => {
   sceneToAdd.add(curveObject);
 };
 
+/* Receives, adds into Bezier's curve path and moves the object */
 const moveObject = (scene, objectName) => {
-  position += 0.00062;
+  position += 0.00150;
   
-  if(position > 1 ){
+  if(position > 1)
     position = 0;
-  }
   
   var point = curvePath.getPointAt(position);
   var object = scene.getObjectByName(objectName);
@@ -222,9 +223,8 @@ const moveObject = (scene, objectName) => {
   
   var pointEnd = curvePath.getPointAt(0);
   
-  if(object.position.x == pointEnd.x && object.position.y == pointEnd.y && object.position.z == pointEnd.z){
+  if(object.position.x == pointEnd.x && object.position.y == pointEnd.y && object.position.z == pointEnd.z)
     object.rotation.y = 1.2;
-  }
 }
 
 /* ---- User interaction ---- */
@@ -294,6 +294,15 @@ const init = () => {
       scaleZ: 0.07,
     });
 
+  createObject(objLoader, scene, 'Bee', 0xF7FF00,
+    {
+      posY: 25,
+      rotY: degToRad(90),
+      scaleX: 80,
+      scaleY: 80,
+      scaleZ: 80,
+    });
+
   CAMERA_ARRAY.push(createCamera({
     x: 0,
     y: 20,
@@ -308,6 +317,7 @@ const init = () => {
     lookZ: 0,
   }));
   
+  // Add Bezier Curve into scene
   addCurve(scene);
 
   const renderer = createRenderer();
