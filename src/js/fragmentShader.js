@@ -17,9 +17,9 @@ const shader = () => `
     vec3 v = normalize(vec3(-pos));
     vec3 r = reflect(-l, n);
 
-    vec3 ambient = color * ambientCoef;
+    vec3 ambient = ambientCoef;
     vec3 diffuse = color * diffuseCoef * max(dot(l, n), 0.0);
-    vec3 specular = color * specularCoef * pow(max(dot(r, v), 0.0), 10.0);
+    vec3 specular = specularCoef * pow(max(dot(r, v), 0.0), 10.0);
 
     vec4 finalColor = vec4(lightInt * (ambient + diffuse + specular), 1.0);
 
