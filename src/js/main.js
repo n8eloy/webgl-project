@@ -7,11 +7,10 @@ import {
   Vector3,
   Vector4,
   CubicBezierCurve3,
-  CubicBezierCurve,
-  Vector2,
   BufferGeometry,
   Line,
-  LineBasicMaterial
+  LineBasicMaterial,
+  CurvePath
 } from '../../assets/js/vendor/three.module.js';
 
 import OBJLoader from '../../assets/js/vendor/OBJLoader.js';
@@ -30,6 +29,10 @@ const USER_INPUT = {
 };
 
 const CAMERA_ARRAY = [];
+
+// Bezier curve constants
+var position = 0;
+var curvePath = new CurvePath();
 
 /* ---- Helpers ---- */
 
@@ -75,12 +78,12 @@ const rotateObject = (scene, objectName, { incX = 0, incY = 0, incZ = 0 }) => {
 
 /* Render and animation loop */
 const render = (scene, renderer) => {
-  rotateObject(scene, 'Fan', { incZ: degToRad(USER_INPUT.fanSpeed) });
-  // rotateObject(scene, 'Table', { incY: degToRad(0.25) });
-  // rotateObject(scene, 'CoffeeCup', { incY: degToRad(0.25) });
+  rotateObject(scene, 'Fan', { incZ: degToRad(USER_INPUT.fanSpeed) });  
   renderer.render(scene, CAMERA_ARRAY[USER_INPUT.currCamera]);
 
   requestAnimationFrame(render.bind(null, scene, renderer));
+
+  moveObject(scene, 'Table');
 };
 
 /* ---- Constructors ---- */
@@ -198,9 +201,31 @@ const addCurve = (sceneToAdd) => {
   
   // Create the final object to add to the scene
   const curveObject = new Line( geometry, material2 );
+  curvePath.add(curve);
 
   sceneToAdd.add(curveObject);
 };
+
+const moveObject = (scene, objectName) => {
+  position += 0.00062;
+  
+  if(position > 1 ){
+    position = 0;
+  }
+  
+  var point = curvePath.getPointAt(position);
+  var object = scene.getObjectByName(objectName);
+  
+  object.position.x = point.x
+  object.position.y = point.y
+  object.position.z = point.z;
+  
+  var pointEnd = curvePath.getPointAt(0);
+  
+  if(object.position.x == pointEnd.x && object.position.y == pointEnd.y && object.position.z == pointEnd.z){
+    object.rotation.y = 1.2;
+  }
+}
 
 /* ---- User interaction ---- */
 
