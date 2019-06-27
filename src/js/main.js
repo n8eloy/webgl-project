@@ -6,7 +6,12 @@ import {
   Color,
   Vector3,
   Vector4,
-  CubicBezierCurve3
+  CubicBezierCurve3,
+  CubicBezierCurve,
+  Vector2,
+  BufferGeometry,
+  Line,
+  LineBasicMaterial
 } from '../../assets/js/vendor/three.module.js';
 
 import OBJLoader from '../../assets/js/vendor/OBJLoader.js';
@@ -166,8 +171,8 @@ const createObject = (objLoader, sceneToAdd, objName, objHexColor,
       }
     });
 
-    sceneToAdd.add(newObject);
-  };
+    sceneToAdd.add(newObject);  
+  };    
 
   const onProgress = (xhr) => {
     console.log(`${xhr.loaded / (xhr.total || 1) * 100}% loaded`);
@@ -176,6 +181,25 @@ const createObject = (objLoader, sceneToAdd, objName, objHexColor,
   objLoader.load(`${objName}.obj`, onSuccess, onProgress, (err) => {
     console.log(err);
   });
+};
+
+const addCurve = (sceneToAdd) => {
+  const curve = new CubicBezierCurve3(
+    new Vector3( -5, 20, 0 ),
+    new Vector3( 10, 20, -5 ),
+    new Vector3( 10, 10, 10),
+    new Vector3( -5, 20, 0 )
+  );
+  
+  const points = curve.getPoints( 50 );
+  const geometry = new BufferGeometry().setFromPoints( points );
+  
+  const material2 = new LineBasicMaterial( { color : 0xff0000 } );
+  
+  // Create the final object to add to the scene
+  const curveObject = new Line( geometry, material2 );
+
+  sceneToAdd.add(curveObject);
 };
 
 /* ---- User interaction ---- */
@@ -258,6 +282,8 @@ const init = () => {
     lookY: 30,
     lookZ: 0,
   }));
+  
+  addCurve(scene);
 
   const renderer = createRenderer();
 
