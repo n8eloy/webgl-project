@@ -29,10 +29,7 @@ const USER_INPUT = {
 };
 
 const CAMERA_ARRAY = [];
-
-// Bezier curve constants
-var position = 0;
-var curvePath = new CurvePath();
+const PATH_ARRAY = [];
 
 /* ---- Helpers ---- */
 
@@ -79,12 +76,45 @@ const rotateObject = (scene, objectName, { incX = 0, incY = 0, incZ = 0 }) => {
 /* Render and animation loop */
 const render = (scene, renderer) => {
   rotateObject(scene, 'Fan', { incZ: degToRad(USER_INPUT.fanSpeed) });  
+  moveThroughPath(scene, 'Bee', 0.0015);
+
   renderer.render(scene, CAMERA_ARRAY[USER_INPUT.currCamera]);
 
   requestAnimationFrame(render.bind(null, scene, renderer));
-
-  moveObject(scene, 'Bee');
 };
+
+/* Adds a curve to both scene and animation paths array */
+const addCurve = (curvePath, animatedObjectName) => {
+  PATH_ARRAY[animatedObjectName] = { Curve: curvePath , Position: 0 };
+};
+
+/* Receives, adds into Bezier's curve path and moves the object */
+const moveThroughPath = (scene, objectName, increment) => {
+  if (PATH_ARRAY[objectName]) {
+    let currPosition = PATH_ARRAY[objectName].Position += increment;
+    let nextPosition = PATH_ARRAY[objectName].Position + 0.01;
+
+    if (currPosition > 1) {
+      PATH_ARRAY[objectName].Position = 0;
+      currPosition = 0;
+    }
+
+    if (nextPosition > 1) {
+      nextPosition = 0;
+    }
+
+    const point = PATH_ARRAY[objectName].Curve.getPointAt(currPosition);
+    const nextPoint = PATH_ARRAY[objectName].Curve.getPointAt(nextPosition);
+    const object = scene.getObjectByName(objectName);
+
+    if (object) {
+      object.position.x = point.x;
+      object.position.y = point.y;
+      object.position.z = point.z;
+      object.lookAt(nextPoint);
+    }
+  }
+}
 
 /* ---- Constructors ---- */
 
@@ -187,45 +217,21 @@ const createObject = (objLoader, sceneToAdd, objName, objHexColor,
 };
 
 /* Creates the Bezier Curve and add it into scene */
-const addCurve = (sceneToAdd) => {
-  const curve = new CubicBezierCurve3(
-    new Vector3( -5, 20, 0 ),
-    new Vector3( 10, 20, -5 ),
-    new Vector3( 10, 10, 10),
-    new Vector3( -5, 20, 0 )
-  );
-  
+const createCurve = (cubicBezierCurve3, sceneToAdd) => {
+  const curve = cubicBezierCurve3;
+
+  const curvePath = new CurvePath();
+  curvePath.add(curve);
+
   const points = curve.getPoints( 50 );
   const geometry = new BufferGeometry().setFromPoints( points );
   
   const material2 = new LineBasicMaterial( { color : 0xffffff } );
-  
-  // Create the final object to add to the scene
   const curveObject = new Line( geometry, material2 );
-  curvePath.add(curve);
-
   sceneToAdd.add(curveObject);
-};
 
-/* Receives, adds into Bezier's curve path and moves the object */
-const moveObject = (scene, objectName) => {
-  position += 0.00150;
-  
-  if(position > 1)
-    position = 0;
-  
-  var point = curvePath.getPointAt(position);
-  var object = scene.getObjectByName(objectName);
-  
-  object.position.x = point.x
-  object.position.y = point.y
-  object.position.z = point.z;
-  
-  var pointEnd = curvePath.getPointAt(0);
-  
-  if(object.position.x == pointEnd.x && object.position.y == pointEnd.y && object.position.z == pointEnd.z)
-    object.rotation.y = 1.2;
-}
+  return curvePath;
+};
 
 /* ---- User interaction ---- */
 
@@ -271,10 +277,10 @@ const init = () => {
   createObject(objLoader, scene, 'CoffeeCup', 0xC8AD90,
     {
       posY: 13.3,
+      rotY: degToRad(45),
       scaleX: 0.15,
       scaleY: 0.15,
       scaleZ: 0.15,
-      rotY: 20,
     });
 
   createObject(objLoader, scene, 'Table', 0x654321,
@@ -303,6 +309,28 @@ const init = () => {
       scaleZ: 80,
     });
 
+  createObject(objLoader, scene, 'Chair', 0x654321,
+    {
+      posY: 7.5,
+      posX: 9,
+      posZ: -7,
+      rotY: degToRad(-20),
+      scaleX: 0.025,
+      scaleY: 0.025,
+      scaleZ: 0.025,
+    });
+
+  createObject(objLoader, scene, 'Chair', 0x654321,
+    {
+      posY: 7.5,
+      posX: -8,
+      posZ: -6,
+      rotY: degToRad(55),
+      scaleX: 0.025,
+      scaleY: 0.025,
+      scaleZ: 0.025,
+    });
+
   CAMERA_ARRAY.push(createCamera({
     x: 0,
     y: 20,
@@ -316,11 +344,22 @@ const init = () => {
     lookY: 30,
     lookZ: 0,
   }));
-  
-  // Add Bezier Curve into scene
-  addCurve(scene);
 
   const renderer = createRenderer();
+
+  // Creates Bee curve
+  const beeCurve = createCurve(
+    new CubicBezierCurve3(
+      new Vector3( -5, 20, 0 ),
+      new Vector3( 10, 20, -5 ),
+      new Vector3( 10, 10, 10),
+      new Vector3( -5, 20, 0 ),
+    ),
+    scene,
+  );
+
+  // Adds Bezier Curve into scene
+  addCurve(beeCurve, 'Bee');
 
   // First time render
   render(scene, renderer);
