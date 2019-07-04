@@ -10,7 +10,11 @@ import {
   BufferGeometry,
   Line,
   LineBasicMaterial,
-  CurvePath
+  CurvePath,
+  PointLight,
+  AmbientLight,
+  AnimationMixer,
+  Clock,
 } from '../../assets/js/vendor/three.module.js';
 
 import GLTFLoader from '../../assets/js/vendor/GLTFLoader.js';
@@ -22,6 +26,7 @@ import vertexShader from './vertexShader.js';
 // import * as MTLLoader from '../../assets/js/vendor/MTLLoader.js';
 
 let CONTAINER;
+let CLOCK;
 const ROOT = '.';
 
 const USER_INPUT = {
@@ -30,6 +35,7 @@ const USER_INPUT = {
 };
 
 const CAMERA_ARRAY = [];
+const GLTF_MIXER_ARRAY = [];
 const PATH_ARRAY = [];
 
 /* ---- Helpers ---- */
@@ -74,31 +80,16 @@ const rotateObject = (scene, objectName, { incX = 0, incY = 0, incZ = 0 }) => {
   object.rotation.set(currX + incX, currY + incY, currZ + incZ);
 };
 
-/* Render and animation loop */
-const render = (scene, renderer) => {
-  rotateObject(scene, 'fan', { incZ: degToRad(USER_INPUT.fanSpeed) });  
-  moveThroughPath(scene, 'bee', 0.0015);
-
-  renderer.render(scene, CAMERA_ARRAY[USER_INPUT.currCamera]);
-
-  requestAnimationFrame(render.bind(null, scene, renderer));
-};
-
-/* Adds a curve to both scene and animation paths array */
-const addCurve = (curvePath, animatedObjectName) => {
-  PATH_ARRAY[animatedObjectName] = { Curve: curvePath , Position: 0 };
-};
-
 /* Receives, adds into Bezier's curve path and moves the object */
 const moveThroughPath = (scene, objectName, increment) => {
   if (PATH_ARRAY[objectName]) {
-    let currPosition = PATH_ARRAY[objectName].Position += increment;
+    let currPosition = PATH_ARRAY[objectName].Position + increment;
     let nextPosition = PATH_ARRAY[objectName].Position + 0.01;
 
     if (currPosition > 1) {
-      PATH_ARRAY[objectName].Position = 0;
       currPosition = 0;
     }
+    PATH_ARRAY[objectName].Position = currPosition;
 
     if (nextPosition > 1) {
       nextPosition = 0;
@@ -115,7 +106,29 @@ const moveThroughPath = (scene, objectName, increment) => {
       object.lookAt(nextPoint);
     }
   }
-}
+};
+
+/* Animate mixers */
+const gltfAnimate = () => {
+  GLTF_MIXER_ARRAY.forEach((mixer) => {
+    mixer.update(CLOCK.getElapsedTime());
+  });
+};
+
+/* Render and animation loop */
+const render = (scene, renderer) => {
+  rotateObject(scene, 'fan', { incZ: degToRad(USER_INPUT.fanSpeed) });
+  moveThroughPath(scene, 'bee', 0.0015);
+  gltfAnimate();
+
+  renderer.render(scene, CAMERA_ARRAY[USER_INPUT.currCamera]);
+  requestAnimationFrame(render.bind(null, scene, renderer));
+};
+
+/* Adds a curve to both scene and animation paths array */
+const addCurve = (curvePath, animatedObjectName) => {
+  PATH_ARRAY[animatedObjectName] = { Curve: curvePath, Position: 0 };
+};
 
 /* ---- Constructors ---- */
 
@@ -184,8 +197,21 @@ const createGLTF = (gltfLoader, sceneToAdd, gltfName,
   }) => {
   const onSuccess = (gltf) => {
     console.log(`${gltfName} loaded`);
-    const root = gltf.scene;
-    sceneToAdd.add(root);
+    const model = gltf.scene;
+    const mixer = new AnimationMixer(model);
+    sceneToAdd.add(model);
+
+    model.name = gltfName;
+    model.position.set(posX, posY, posZ);
+    model.scale.set(scaleX, scaleY, scaleZ);
+    model.rotation.set(rotX, rotY, rotZ);
+
+    // test
+    gltf.animations.forEach((clip) => {
+      mixer.clipAction(clip).play();
+    });
+
+    GLTF_MIXER_ARRAY.push(mixer);
   };
 
   const onProgress = (xhr) => {
@@ -230,8 +256,8 @@ const createObject = (objLoader, sceneToAdd, objName, objHexColor,
       }
     });
 
-    sceneToAdd.add(newObject);  
-  };    
+    sceneToAdd.add(newObject);
+  };
 
   const onProgress = (xhr) => {
     console.log(`${xhr.loaded / (xhr.total || 1) * 100}% loaded`);
@@ -249,14 +275,24 @@ const createCurve = (cubicBezierCurve3, sceneToAdd) => {
   const curvePath = new CurvePath();
   curvePath.add(curve);
 
-  const points = curve.getPoints( 50 );
-  const geometry = new BufferGeometry().setFromPoints( points );
-  
-  const material2 = new LineBasicMaterial( { color : 0xffffff } );
-  const curveObject = new Line( geometry, material2 );
+  const points = curve.getPoints(50);
+  const geometry = new BufferGeometry().setFromPoints(points);
+
+  const material2 = new LineBasicMaterial({ color: 0xffffff });
+  const curveObject = new Line(geometry, material2);
   sceneToAdd.add(curveObject);
 
   return curvePath;
+};
+
+/* Creates a basic defined lighting setup */
+const createLight = (sceneToAdd) => {
+  const pointLight = new PointLight(0xFFFFFF, 1, 0, 2);
+  pointLight.position.set(50, 10, 0);
+  const ambientLight = new AmbientLight(0xAAAAAA, 1);
+
+  sceneToAdd.add(pointLight);
+  sceneToAdd.add(ambientLight);
 };
 
 /* ---- User interaction ---- */
@@ -296,16 +332,20 @@ const receiveInput = ({ keyCode }) => {
 const init = () => {
   CONTAINER = document.getElementById('container');
 
+  // Initializes clock
+  CLOCK = new Clock(true);
+
   const scene = createScene();
-  const { objLoader , gltfLoader } = createLoaders();
+  const { objLoader, gltfLoader } = createLoaders();
 
   // Loads complete GLTF packages into scene
   createGLTF(gltfLoader, scene, 'cat', {
-    posY: 1,
+    posY: 8,
+    posX: 15,
     rotY: degToRad(1),
-    scaleX: 1,
-    scaleY: 1,
-    scaleZ: 1,
+    scaleX: 0.01,
+    scaleY: 0.01,
+    scaleZ: 0.01,
   });
 
   // Loads objects into scene
@@ -385,16 +425,18 @@ const init = () => {
   // Creates Bee curve
   const beeCurve = createCurve(
     new CubicBezierCurve3(
-      new Vector3( -5, 20, 0 ),
-      new Vector3( 10, 20, -5 ),
-      new Vector3( 10, 10, 10),
-      new Vector3( -5, 20, 0 ),
-    ),
-    scene,
+      new Vector3(-5, 20, 0),
+      new Vector3(10, 20, -5),
+      new Vector3(10, 10, 10),
+      new Vector3(-5, 20, 0)
+    ), scene
   );
 
   // Adds Bezier Curve into scene
   addCurve(beeCurve, 'bee');
+
+  // Adds basic light for non-custom shader objects
+  createLight(scene);
 
   // First time render
   render(scene, renderer);
