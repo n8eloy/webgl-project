@@ -13,6 +13,7 @@ import {
   CurvePath
 } from '../../assets/js/vendor/three.module.js';
 
+import GLTFLoader from '../../assets/js/vendor/GLTFLoader.js';
 import OBJLoader from '../../assets/js/vendor/OBJLoader.js';
 import fragmentShader from './fragmentShader.js';
 import vertexShader from './vertexShader.js';
@@ -75,8 +76,8 @@ const rotateObject = (scene, objectName, { incX = 0, incY = 0, incZ = 0 }) => {
 
 /* Render and animation loop */
 const render = (scene, renderer) => {
-  rotateObject(scene, 'Fan', { incZ: degToRad(USER_INPUT.fanSpeed) });  
-  moveThroughPath(scene, 'Bee', 0.0015);
+  rotateObject(scene, 'fan', { incZ: degToRad(USER_INPUT.fanSpeed) });  
+  moveThroughPath(scene, 'bee', 0.0015);
 
   renderer.render(scene, CAMERA_ARRAY[USER_INPUT.currCamera]);
 
@@ -123,13 +124,16 @@ const createLoaders = () => {
   const objLoader = new OBJLoader();
   objLoader.setPath(`${ROOT}/assets/obj/`);
 
+  const gltfLoader = new GLTFLoader();
+  gltfLoader.setPath(`${ROOT}/assets/gltf/`);
+
   // const txtLoader = new TextureLoader();
   // txtLoader.setPath(`${ROOT}/assets/txt/`);
 
   // const mtlLoader = new THREE.MTLLoader();
   // mtlLoader.setPath(`${ROOT}/assets/mtl/`);
 
-  return { objLoader };
+  return { objLoader, gltfLoader };
 };
 
 /* Initializes scene */
@@ -169,6 +173,28 @@ const createRenderer = () => {
   CONTAINER.appendChild(renderer.domElement);
 
   return renderer;
+};
+
+/* Loads an GLTF into scene */
+const createGLTF = (gltfLoader, sceneToAdd, gltfName,
+  {
+    posX = 0, posY = 0, posZ = 0,
+    scaleX = 1, scaleY = 1, scaleZ = 1,
+    rotX = 0, rotY = 0, rotZ = 0,
+  }) => {
+  const onSuccess = (gltf) => {
+    console.log(`${gltfName} loaded`);
+    const root = gltf.scene;
+    sceneToAdd.add(root);
+  };
+
+  const onProgress = (xhr) => {
+    console.log(`${xhr.loaded / (xhr.total || 1) * 100}% loaded`);
+  };
+
+  gltfLoader.load(`${gltfName}.gltf`, onSuccess, onProgress, (err) => {
+    console.log(err);
+  });
 };
 
 /* Loads an object into scene */
@@ -271,10 +297,19 @@ const init = () => {
   CONTAINER = document.getElementById('container');
 
   const scene = createScene();
-  const { objLoader } = createLoaders();
+  const { objLoader , gltfLoader } = createLoaders();
+
+  // Loads complete GLTF packages into scene
+  createGLTF(gltfLoader, scene, 'cat', {
+    posY: 1,
+    rotY: degToRad(1),
+    scaleX: 1,
+    scaleY: 1,
+    scaleZ: 1,
+  });
 
   // Loads objects into scene
-  createObject(objLoader, scene, 'CoffeeCup', 0xC8AD90,
+  createObject(objLoader, scene, 'coffeeCup', 0xC8AD90,
     {
       posY: 13.3,
       rotY: degToRad(45),
@@ -283,7 +318,7 @@ const init = () => {
       scaleZ: 0.15,
     });
 
-  createObject(objLoader, scene, 'Table', 0x654321,
+  createObject(objLoader, scene, 'table', 0x654321,
     {
       posY: 7,
       scaleX: 2,
@@ -291,7 +326,7 @@ const init = () => {
       scaleZ: 2,
     });
 
-  createObject(objLoader, scene, 'Fan', 0x202020,
+  createObject(objLoader, scene, 'fan', 0x202020,
     {
       posY: 25,
       rotX: degToRad(-90),
@@ -300,7 +335,7 @@ const init = () => {
       scaleZ: 0.07,
     });
 
-  createObject(objLoader, scene, 'Bee', 0xF7FF00,
+  createObject(objLoader, scene, 'bee', 0xF7FF00,
     {
       posY: 25,
       rotY: degToRad(90),
@@ -309,7 +344,7 @@ const init = () => {
       scaleZ: 80,
     });
 
-  createObject(objLoader, scene, 'Chair', 0x654321,
+  createObject(objLoader, scene, 'chair', 0x654321,
     {
       posY: 7.5,
       posX: 9,
@@ -320,7 +355,7 @@ const init = () => {
       scaleZ: 0.025,
     });
 
-  createObject(objLoader, scene, 'Chair', 0x654321,
+  createObject(objLoader, scene, 'chair', 0x654321,
     {
       posY: 7.5,
       posX: -8,
@@ -359,7 +394,7 @@ const init = () => {
   );
 
   // Adds Bezier Curve into scene
-  addCurve(beeCurve, 'Bee');
+  addCurve(beeCurve, 'bee');
 
   // First time render
   render(scene, renderer);
