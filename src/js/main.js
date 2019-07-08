@@ -111,7 +111,7 @@ const moveThroughPath = (scene, objectName, increment) => {
 /* Animate mixers */
 const gltfAnimate = () => {
   GLTF_MIXER_ARRAY.forEach((mixer) => {
-    mixer.update(CLOCK.getElapsedTime());
+    mixer.update(CLOCK.getDelta());
   });
 };
 
@@ -288,8 +288,8 @@ const createCurve = (cubicBezierCurve3, sceneToAdd) => {
 /* Creates a basic defined lighting setup */
 const createLight = (sceneToAdd) => {
   const pointLight = new PointLight(0xFFFFFF, 1, 0, 2);
-  pointLight.position.set(50, 10, 0);
-  const ambientLight = new AmbientLight(0xAAAAAA, 1);
+  pointLight.position.set(-5, 2, 0);
+  const ambientLight = new AmbientLight(0xCCCCCC, 1);
 
   sceneToAdd.add(pointLight);
   sceneToAdd.add(ambientLight);
@@ -340,12 +340,13 @@ const init = () => {
 
   // Loads complete GLTF packages into scene
   createGLTF(gltfLoader, scene, 'cat', {
-    posY: 8,
-    posX: 15,
-    rotY: degToRad(1),
-    scaleX: 0.01,
-    scaleY: 0.01,
-    scaleZ: 0.01,
+    posY: 7,
+    posX: 5,
+    posZ: 5,
+    rotY: degToRad(-120),
+    scaleX: 0.25,
+    scaleY: 0.25,
+    scaleZ: 0.25,
   });
 
   // Loads objects into scene
@@ -418,6 +419,12 @@ const init = () => {
     lookX: 0,
     lookY: 30,
     lookZ: 0,
+  }));
+
+  CAMERA_ARRAY.push(createCamera({
+    z: 14,
+    x: 4,
+    y: 8,
   }));
 
   const renderer = createRenderer();
