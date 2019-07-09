@@ -14,7 +14,11 @@ import {
   PointLight,
   AmbientLight,
   AnimationMixer,
+  TextureLoader,
   Clock,
+  MeshBasicMaterial,
+  UniformsUtils,
+  Mesh
 } from '../../assets/js/vendor/three.module.js';
 
 import GLTFLoader from '../../assets/js/vendor/GLTFLoader.js';
@@ -240,10 +244,48 @@ const createObject = (objLoader, sceneToAdd, objName, objHexColor,
       lightPos: { value: new Vector4(10.0, 10.0, 0.0, 1.0) },
       ambientCoef: { value: new Vector3(0.1, 0.1, 0.1) },
       diffuseCoef: { value: new Vector3(0.8, 0.8, 0.8) },
-      specularCoef: { value: new Vector3(0.9, 0.9, 0.9) },
+      specularCoef: { value: new Vector3(0.9, 0.9, 0.9) }
     };
 
     const material = new ShaderMaterial({ uniforms, vertexShader, fragmentShader });
+
+    newObject.name = objName;
+    newObject.position.set(posX, posY, posZ);
+    newObject.scale.set(scaleX, scaleY, scaleZ);
+    newObject.rotation.set(rotX, rotY, rotZ);
+
+    newObject.traverse((node) => {
+      if (node.isMesh) {
+        node.material = material;
+      }
+    });
+
+    sceneToAdd.add(newObject);
+  };
+
+  const onProgress = (xhr) => {
+    console.log(`${xhr.loaded / (xhr.total || 1) * 100}% loaded`);
+  };
+
+  objLoader.load(`${objName}.obj`, onSuccess, onProgress, (err) => {
+    console.log(err);
+  });
+};
+
+/* Loads an object into scene */
+const createCoffeeObject = (objLoader, sceneToAdd, objName, objHexColor,
+  {
+    posX = 0, posY = 0, posZ = 0,
+    scaleX = 1, scaleY = 1, scaleZ = 1,
+    rotX = 0, rotY = 0, rotZ = 0,
+  }) => {
+  const onSuccess = (object) => {
+    console.log(`${objName} loaded`);
+    const newObject = object;
+
+    const texture = new TextureLoader().load( `${ROOT}/assets/txt/${objName}.jpg` );
+
+    const material = new MeshBasicMaterial({ map: texture });
 
     newObject.name = objName;
     newObject.position.set(posX, posY, posZ);
@@ -278,7 +320,7 @@ const createCurve = (cubicBezierCurve3, sceneToAdd) => {
   const points = curve.getPoints(50);
   const geometry = new BufferGeometry().setFromPoints(points);
 
-  const material2 = new LineBasicMaterial({ color: 0xffffff });
+  const material2 = new LineBasicMaterial({ color: '0xffffff' });
   const curveObject = new Line(geometry, material2);
   sceneToAdd.add(curveObject);
 
@@ -343,20 +385,20 @@ const init = () => {
     posY: 7,
     posX: 5,
     posZ: 5,
-    rotY: degToRad(-120),
+    rotY: degToRad(-140),
     scaleX: 0.25,
     scaleY: 0.25,
     scaleZ: 0.25,
   });
 
   // Loads objects into scene
-  createObject(objLoader, scene, 'coffeeCup', 0xC8AD90,
+  createCoffeeObject(objLoader, scene, 'coffeeCup', 0xC8AD90,
     {
       posY: 13.3,
       rotY: degToRad(45),
-      scaleX: 0.15,
-      scaleY: 0.15,
-      scaleZ: 0.15,
+      scaleX: 0.3,
+      scaleY: 0.3,
+      scaleZ: 0.3,
     });
 
   createObject(objLoader, scene, 'table', 0x654321,
@@ -380,9 +422,9 @@ const init = () => {
     {
       posY: 25,
       rotY: degToRad(90),
-      scaleX: 80,
-      scaleY: 80,
-      scaleZ: 80,
+      scaleX: 70,
+      scaleY: 70,
+      scaleZ: 70,
     });
 
   createObject(objLoader, scene, 'chair', 0x654321,
